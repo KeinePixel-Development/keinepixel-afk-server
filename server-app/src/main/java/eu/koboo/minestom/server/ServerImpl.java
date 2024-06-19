@@ -8,10 +8,17 @@ import eu.koboo.minestom.config.ConfigLoader;
 import eu.koboo.minestom.console.Console;
 
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
 import lombok.Getter;
+import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.entity.Player;
+import net.minestom.server.entity.PlayerSkin;
 import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.AsyncPlayerPreLoginEvent;
@@ -21,6 +28,8 @@ import net.minestom.server.extras.velocity.VelocityProxy;
 import net.minestom.server.instance.*;
 import net.minestom.server.instance.batch.ChunkBatch;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.timer.Task;
+import net.minestom.server.timer.TaskSchedule;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.tinylog.Logger;
@@ -35,10 +44,13 @@ public class ServerImpl extends Server {
     @Getter
     private final Console console;
 
+    Map<UUID, Task> tasks;
+
     public ServerImpl() {
         long startTime = System.nanoTime();
 
         instance = this;
+        tasks = new HashMap<>();
 
         Logger.info("Loading settings..");
         serverConfig = ConfigLoader.loadConfig();
@@ -66,6 +78,19 @@ public class ServerImpl extends Server {
         eventHandler.addListener(AsyncPlayerPreLoginEvent.class, event -> {
             Logger.info("Player " + event.getUsername() + " is trying to join..");
             event.getPlayer().setInstance(instanceContainer, new Pos(0, 90, 0));
+            Logger.info("Player " + event.getUsername() + " joined!");
+        });
+
+        eventHandler.addListener(AsyncPlayerConfigurationEvent.class, event -> {
+            Player player = event.getPlayer();
+            player.setSkin(PlayerSkin.fromUsername("MHF_Alex"));
+            player.setDisplayName(Component.text("§r"));
+            player.setExp(2024);
+            player.setFood(20);
+            player.setHealth(20);
+            Task task = MinecraftServer.getSchedulerManager().scheduleTask(() -> {
+
+            }, TaskSchedule.tick(20), TaskSchedule.seconds(30));
         });
 
         String host = serverConfig.host();
