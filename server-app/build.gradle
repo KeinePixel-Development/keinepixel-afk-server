@@ -18,6 +18,8 @@ dependencies {
     compileOnly "org.jetbrains:annotations:${annotationsVersion}"
     compileOnly "me.carleslc.Simple-YAML:Simple-Yaml:${yamlVersion}"
 
+    implementation "de.keinepixel:api-common:${pixelApi}"
+    implementation "de.keinepixel:api-minecraft:${pixelApi}"
     implementation "org.tinylog:slf4j-tinylog:${tinylogVersion}"
     implementation "org.tinylog:tinylog-impl:${tinylogVersion}"
     implementation "org.fusesource.jansi:jansi:${jansiVersion}"

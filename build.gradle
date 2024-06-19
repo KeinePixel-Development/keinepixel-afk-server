@@ -16,6 +16,14 @@ allprojects {
         maven {
             url 'https://repo.spongepowered.org/maven'
         }
+        maven {
+            name 'keinepixel-repository'
+            url 'https://reposilite.koboo.eu/entix'
+            credentials {
+                username System.getenv('REPO_USER')
+                password System.getenv('REPO_TOKEN')
+            }
+        }
     }
 
 }
