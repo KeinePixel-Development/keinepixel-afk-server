@@ -8,12 +8,12 @@ allprojects {
     repositories {
         mavenCentral()
         maven {
-            // Minestom
             url 'https://jitpack.io'
         }
-
         maven {
-            // Dependencies
+            url "https://reposilite.koboo.eu/releases"
+        }
+        maven {
             url 'https://repo.spongepowered.org/maven'
         }
     }

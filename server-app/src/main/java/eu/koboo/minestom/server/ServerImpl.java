@@ -6,20 +6,19 @@ import eu.koboo.minestom.commands.CommandStop;
 import eu.koboo.minestom.commands.CommandVersion;
 import eu.koboo.minestom.config.ConfigLoader;
 import eu.koboo.minestom.console.Console;
+
+import java.nio.file.Paths;
 import java.util.List;
 import lombok.Getter;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.event.GlobalEventHandler;
-import net.minestom.server.event.player.PlayerLoginEvent;
+import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
+import net.minestom.server.event.player.AsyncPlayerPreLoginEvent;
 import net.minestom.server.extras.MojangAuth;
 import net.minestom.server.extras.bungee.BungeeCordProxy;
 import net.minestom.server.extras.velocity.VelocityProxy;
-import net.minestom.server.instance.Chunk;
-import net.minestom.server.instance.ChunkGenerator;
-import net.minestom.server.instance.ChunkPopulator;
-import net.minestom.server.instance.InstanceContainer;
-import net.minestom.server.instance.InstanceManager;
+import net.minestom.server.instance.*;
 import net.minestom.server.instance.batch.ChunkBatch;
 import net.minestom.server.instance.block.Block;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +48,6 @@ public class ServerImpl extends Server {
 
         Logger.info("Initializing server..");
         MinecraftServer minecraftServer = MinecraftServer.init();
-        MinecraftServer.setTerminalEnabled(false);
 
         MinecraftServer.getExceptionManager()
                 .setExceptionHandler(exc -> Logger.error("An unexpected error occurred! ", exc));
@@ -61,28 +59,13 @@ public class ServerImpl extends Server {
         Logger.info("Creating instance..");
         InstanceManager instanceManager = MinecraftServer.getInstanceManager();
         InstanceContainer instanceContainer = instanceManager.createInstanceContainer();
-        instanceContainer.setChunkGenerator(new ChunkGenerator() {
-            @Override
-            public void generateChunkData(
-                    @NotNull ChunkBatch batch,
-                    int chunkX, int chunkZ) {
-                for(int x = 0; x < Chunk.CHUNK_SIZE_X; x++) {
-                    for(int z = 0; z < Chunk.CHUNK_SIZE_Z; z++) {
-                        batch.setBlock(x, 0, z, Block.BARRIER);
-                    }
-                }
-            }
-
-            @Override
-            public @Nullable List<ChunkPopulator> getPopulators() {
-                return null;
-            }
-        });
+        AnvilLoader anvilLoader = new AnvilLoader(Paths.get("afk-lobby"));
+        anvilLoader.saveInstance(instanceContainer);
 
         GlobalEventHandler eventHandler = MinecraftServer.getGlobalEventHandler();
-        eventHandler.addListener(PlayerLoginEvent.class, event -> {
-            event.setSpawningInstance(instanceContainer);
-            event.getPlayer().setRespawnPoint(new Pos(0, 44, 0));
+        eventHandler.addListener(AsyncPlayerPreLoginEvent.class, event -> {
+            Logger.info("Player " + event.getUsername() + " is trying to join..");
+            event.getPlayer().setInstance(instanceContainer, new Pos(0, 90, 0));
         });
 
         String host = serverConfig.host();
@@ -91,8 +74,6 @@ public class ServerImpl extends Server {
         MinecraftServer.setBrandName(this.getName());
         MinecraftServer.setDifficulty(serverConfig.difficulty());
 
-        MinecraftServer.setRateLimit(serverConfig.packetRateLimit());
-        MinecraftServer.setMaxPacketSize(serverConfig.maxPacketSize());
         MinecraftServer.setCompressionThreshold(serverConfig.compressionThreshold());
 
         setViewDistance("minestom.chunk-view-distance", serverConfig.chunkViewDistance());

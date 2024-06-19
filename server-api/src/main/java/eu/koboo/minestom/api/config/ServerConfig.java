@@ -1,6 +1,5 @@
 package eu.koboo.minestom.api.config;
 
-import net.minestom.server.world.Difficulty;
 
 /**
  * Config object to represent the `server_config.yml` file
