@@ -1,5 +1,7 @@
 package eu.koboo.minestom.server;
 
+import de.keinepixel.core.ServerConstants;
+import de.keinepixel.core.adventure.ChatAction;
 import eu.koboo.minestom.api.server.Server;
 import eu.koboo.minestom.api.config.ServerConfig;
 import eu.koboo.minestom.commands.CommandStop;
@@ -22,6 +24,8 @@ import net.minestom.server.entity.PlayerSkin;
 import net.minestom.server.event.GlobalEventHandler;
 import net.minestom.server.event.player.AsyncPlayerConfigurationEvent;
 import net.minestom.server.event.player.AsyncPlayerPreLoginEvent;
+import net.minestom.server.event.player.PlayerDisconnectEvent;
+import net.minestom.server.event.player.PlayerMoveEvent;
 import net.minestom.server.extras.MojangAuth;
 import net.minestom.server.extras.bungee.BungeeCordProxy;
 import net.minestom.server.extras.velocity.VelocityProxy;
@@ -89,8 +93,31 @@ public class ServerImpl extends Server {
             player.setFood(20);
             player.setHealth(20);
             Task task = MinecraftServer.getSchedulerManager().scheduleTask(() -> {
-
+                for (int i = 0; i < 100; i++) {
+                    player.sendMessage("§r");
+                }
+                player.sendMessage("§r");
+                player.sendMessage(new ChatAction(ServerConstants.PREFIX).of("§7Willkommen auf dem AFK-Server.").comp());
+                player.sendMessage(new ChatAction(ServerConstants.PREFIX).of("§7Bitte bewege dich, um zurück auf").comp());
+                player.sendMessage(new ChatAction(ServerConstants.PREFIX).of("§7SkyBlock zu gelangen.").comp());
+                player.sendMessage("§r");
             }, TaskSchedule.tick(20), TaskSchedule.seconds(30));
+            tasks.put(player.getUuid(), task);
+        });
+
+        eventHandler.addListener(PlayerDisconnectEvent.class, event -> {
+            Player player = event.getPlayer();
+            Task task = tasks.get(player.getUuid());
+            task.cancel();
+        });
+
+        eventHandler.addListener(PlayerMoveEvent.class, event -> {
+            Player player = event.getPlayer();
+            if (!VelocityProxy.isEnabled()) {
+                player.kick(Component.text("Willkommen zurück."));
+                return;
+            }
+            //TODO: Send player back to SkyBlock
         });
 
         String host = serverConfig.host();
